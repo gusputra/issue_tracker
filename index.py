@@ -1,13 +1,11 @@
-from flask import Flask, render_template, request, redirect, session, send_file
+from flask import Flask, render_template, request, redirect, session
 import pymysql
 from datetime import datetime
-import pandas as pd
-import io
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Image, Spacer
-from reportlab.lib import colors
-from reportlab.lib.pagesizes import A4, landscape
-from reportlab.lib.styles import getSampleStyleSheet
 import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "supersecretkey")
@@ -19,21 +17,19 @@ def inject_now():
 # --------------------------------------------------
 # Database Connection
 # --------------------------------------------------
-import os
-from dotenv import load_dotenv
-import pymysql
-
-load_dotenv()
-
 def get_db():
-    return pymysql.connect(
-        host=os.getenv("DB_HOST", "mysql.railway.internal"),
-        user=os.getenv("DB_USER", "root"),
-        password=os.getenv("DB_PASSWORD", "yBlbPwDSgCZKqzXqrjYQHgFzNmpZDdYw"),
-        database=os.getenv("DB_NAME", "railway"),
-        port=int(os.getenv("DB_PORT", 3306)),
-        cursorclass=pymysql.cursors.DictCursor
-    )
+    try:
+        return pymysql.connect(
+            host=os.getenv("DB_HOST", "mysql.railway.internal"),
+            user=os.getenv("DB_USER", "root"),
+            password=os.getenv("DB_PASSWORD"),
+            database=os.getenv("DB_NAME", "railway"),
+            port=int(os.getenv("DB_PORT", 3306)),
+            cursorclass=pymysql.cursors.DictCursor
+        )
+    except Exception as e:
+        print("❌ Database connection error:", e)
+        raise
 
 # --------------------------------------------------
 # User Login Data
@@ -47,14 +43,17 @@ USERS = {
 # Logging Function
 # --------------------------------------------------
 def log_action(username, action, issue_id=None):
-    db = get_db()
-    with db.cursor() as cursor:
-        cursor.execute(
-            "INSERT INTO audit_log (username, action, issue_id, timestamp) VALUES (%s, %s, %s, %s)",
-            (username, action, issue_id, datetime.now()),
-        )
-    db.commit()
-    db.close()
+    try:
+        db = get_db()
+        with db.cursor() as cursor:
+            cursor.execute(
+                "INSERT INTO audit_log (username, action, issue_id, timestamp) VALUES (%s, %s, %s, %s)",
+                (username, action, issue_id, datetime.now()),
+            )
+        db.commit()
+        db.close()
+    except Exception as e:
+        print("⚠️ Log action error:", e)
 
 # --------------------------------------------------
 # LOGIN PAGE
@@ -62,8 +61,8 @@ def log_action(username, action, issue_id=None):
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        username = request.form["username"]
-        password = request.form["password"]
+        username = request.form.get("username")
+        password = request.form.get("password")
         user = USERS.get(username)
 
         if user and user["password"] == password:
@@ -91,31 +90,34 @@ def dashboard():
     if "username" not in session:
         return redirect("/login")
 
-    db = get_db()
-    with db.cursor() as cursor:
-        cursor.execute("SELECT COUNT(*) AS total FROM issues")
-        total = cursor.fetchone()["total"]
+    try:
+        db = get_db()
+        with db.cursor() as cursor:
+            cursor.execute("SELECT COUNT(*) AS total FROM issues")
+            total = cursor.fetchone()["total"]
 
-        cursor.execute("SELECT COUNT(*) AS open_issues FROM issues WHERE status='Open'")
-        open_issues = cursor.fetchone()["open_issues"]
+            cursor.execute("SELECT COUNT(*) AS open_issues FROM issues WHERE status='Open'")
+            open_issues = cursor.fetchone()["open_issues"]
 
-        cursor.execute("SELECT COUNT(*) AS in_progress FROM issues WHERE status='In Progress'")
-        in_progress = cursor.fetchone()["in_progress"]
+            cursor.execute("SELECT COUNT(*) AS in_progress FROM issues WHERE status='In Progress'")
+            in_progress = cursor.fetchone()["in_progress"]
 
-        cursor.execute("SELECT COUNT(*) AS closed_issues FROM issues WHERE status='Closed'")
-        closed_issues = cursor.fetchone()["closed_issues"]
+            cursor.execute("SELECT COUNT(*) AS closed_issues FROM issues WHERE status='Closed'")
+            closed_issues = cursor.fetchone()["closed_issues"]
 
-        cursor.execute("""
-            SELECT 
-                SUM(CASE WHEN priority='Low' THEN 1 ELSE 0 END) AS priority_low,
-                SUM(CASE WHEN priority='Medium' THEN 1 ELSE 0 END) AS priority_medium,
-                SUM(CASE WHEN priority='High' THEN 1 ELSE 0 END) AS priority_high,
-                SUM(CASE WHEN priority='Critical' THEN 1 ELSE 0 END) AS priority_critical
-            FROM issues
-        """)
-        priority_data = cursor.fetchone()
-
-    db.close()
+            cursor.execute("""
+                SELECT 
+                    SUM(CASE WHEN priority='Low' THEN 1 ELSE 0 END) AS priority_low,
+                    SUM(CASE WHEN priority='Medium' THEN 1 ELSE 0 END) AS priority_medium,
+                    SUM(CASE WHEN priority='High' THEN 1 ELSE 0 END) AS priority_high,
+                    SUM(CASE WHEN priority='Critical' THEN 1 ELSE 0 END) AS priority_critical
+                FROM issues
+            """)
+            priority_data = cursor.fetchone()
+        db.close()
+    except Exception as e:
+        print("❌ Dashboard DB error:", e)
+        return f"Database connection failed: {e}"
 
     return render_template(
         "dashboard.html",
@@ -125,20 +127,16 @@ def dashboard():
         open_issues=open_issues,
         in_progress=in_progress,
         closed_issues=closed_issues,
-        priority_low=priority_data["priority_low"] or 0,
-        priority_medium=priority_data["priority_medium"] or 0,
-        priority_high=priority_data["priority_high"] or 0,
-        priority_critical=priority_data["priority_critical"] or 0
+        priority_low=priority_data.get("priority_low", 0),
+        priority_medium=priority_data.get("priority_medium", 0),
+        priority_high=priority_data.get("priority_high", 0),
+        priority_critical=priority_data.get("priority_critical", 0)
     )
 
 # --------------------------------------------------
-# ROUTES LAINNYA (sama seperti sebelumnya)
-# --------------------------------------------------
-# [semua kode lain tetap sama — add_issue, recent, edit, delete, audit_log, export]
-
-# --------------------------------------------------
-# RUN SERVER (Railway auto detect port)
+# RUN SERVER (for Railway)
 # --------------------------------------------------
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
+    print(f"🚀 Server running on port {port}")
     app.run(host="0.0.0.0", port=port)
