@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+*.sqlite3
+
+# Virtual environments
+env/
+venv/
+ENV/
+.venv/
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
+
+# Large files or temp
+uploads/
+static/uploads/
