@@ -21,3 +21,4 @@ ENV/
 # Large files or temp
 uploads/
 static/uploads/
+venv/
