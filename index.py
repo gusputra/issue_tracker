@@ -85,6 +85,7 @@ def login():
 def logout():
     if "username" in session:
         log_action(session["username"], "Logout")
+    session.modified = True
     session.clear()
     return redirect(url_for("login"))
 
