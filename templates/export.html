@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Export Report - Issue Tracker</title>
+
+  <!-- Tailwind CSS (CDN) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Flatpickr (Calendar Picker) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/airbnb.css">
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+  <style>
+    /* Traveloka-inspired style */
+    body {
+      font-family: "Inter", sans-serif;
+      background-color: #f9fafb;
+    }
+
+    .flatpickr-calendar {
+      border-radius: 12px !important;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      font-family: "Inter", sans-serif;
+    }
+
+    .flatpickr-day.selected,
+    .flatpickr-day.startRange,
+    .flatpickr-day.endRange,
+    .flatpickr-day.selected.inRange {
+      background: #1d4ed8 !important; /* Traveloka blue */
+      color: white !important;
+    }
+
+    .flatpickr-day:hover {
+      background: #3b82f6 !important;
+      color: white !important;
+    }
+
+    .flatpickr-months {
+      background-color: #1e40af;
+      color: white;
+      border-radius: 12px 12px 0 0;
+    }
+
+    .flatpickr-weekday {
+      color: #1e3a8a;
+    }
+
+    .card {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+      padding: 2rem;
+      max-width: 600px;
+      margin: 60px auto;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="card">
+    <h1 class="text-2xl font-bold text-blue-700 mb-4 text-center">📤 Export Issue Report</h1>
+    <p class="text-gray-600 text-center mb-6">
+      Choose a date range and export report as Excel or PDF.
+    </p>
+
+    <form method="POST" action="/export" class="space-y-5">
+      <!-- Date Picker -->
+      <div>
+        <label class="font-semibold text-gray-700 block mb-1">Select Date Range</label>
+        <input 
+          id="date_range"
+          name="date_range"
+          placeholder="Choose date range"
+          class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
+          required
+        >
+      </div>
+
+      <!-- Report Type -->
+      <div>
+        <label class="font-semibold text-gray-700 block mb-1">Report Type</label>
+        <select 
+          name="export_type" 
+          required 
+          class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
+        >
+          <option value="" disabled selected>-- Select Report Type --</option>
+          <option value="excel">📊 Excel (.xlsx)</option>
+          <option value="pdf">📄 PDF (.pdf)</option>
+        </select>
+      </div>
+
+      <!-- Submit Button -->
+      <button 
+        type="submit"
+        class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition"
+      >
+        Generate Report
+      </button>
+    </form>
+  </div>
+
+  <script>
+    flatpickr("#date_range", {
+      mode: "range",
+      dateFormat: "Y-m-d",
+      altInput: true,
+      altFormat: "F j, Y",
+      theme: "airbnb",
+      animate: true,
+      locale: {
+        rangeSeparator: " → ",
+      },
+    });
+  </script>
+</body>
+</html>

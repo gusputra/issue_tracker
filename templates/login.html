@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login | Issue Tracker</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#1E3A8A',
+            accent: '#2563EB',
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    /* === TRANSPARENT LOADING OVERLAY === */
+    #loading-screen {
+      position: fixed;
+      inset: 0;
+      background-color: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(6px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 50;
+      transition: opacity 0.8s ease, visibility 0.8s ease;
+    }
+
+    #loading-screen.fade-out {
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    .loading-logo {
+      width: 100px;
+      height: 100px;
+      opacity: 0.85;
+      animation: pulse 1.5s infinite ease-in-out;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.4; transform: scale(0.95); }
+      50% { opacity: 1; transform: scale(1.05); }
+    }
+
+    /* === LOGIN CONTAINER ANIMATION === */
+    .fade-in {
+      animation: fadeIn 1s ease forwards;
+      opacity: 0;
+      transform: translateY(10px);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+
+<body class="bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center h-screen font-sans">
+
+  <!-- Transparent Loading Screen -->
+  <div id="loading-screen">
+    <img src="{{ url_for('static', filename='images/loading_logo.png') }}" alt="Loading..." class="loading-logo">
+  </div>
+
+  <!-- Login Container -->
+  <div id="login-container" class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-10 fade-in hidden">
+    <div class="text-center mb-6">
+      <div class="mx-auto w-16 h-16 bg-blue-600 text-white rounded-full flex items-center justify-center text-3xl font-bold">
+        🧾
+      </div>
+      <h1 class="text-2xl font-bold text-gray-800 mt-3">Issue Tracker</h1>
+      <p class="text-gray-500 text-sm">Welcome back! Please log in to continue.</p>
+    </div>
+
+    <form method="POST" action="/login" class="space-y-5">
+      <div>
+        <label for="username" class="block text-gray-700 font-semibold mb-1">Username</label>
+        <input 
+          type="text" 
+          id="username"
+          name="username" 
+          placeholder="Enter your username"
+          required
+          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition"
+        />
+      </div>
+
+      <div>
+        <label for="password" class="block text-gray-700 font-semibold mb-1">Password</label>
+        <input 
+          type="password" 
+          id="password"
+          name="password" 
+          placeholder="Enter your password"
+          required
+          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition"
+        />
+      </div>
+
+      <button 
+        type="submit"
+        class="w-full bg-accent text-white font-semibold py-3 rounded-lg hover:bg-blue-700 transition duration-300 shadow-md"
+      >
+        Login
+      </button>
+    </form>
+
+    <div class="text-center mt-6 text-gray-500 text-sm">
+      <p>Copyright © {{ now().year }} Hotel Link Support ID</p>
+    </div>
+  </div>
+
+  <script>
+    // Loading overlay fades out after 2 seconds
+    window.addEventListener('load', () => {
+      const loader = document.getElementById('loading-screen');
+      const content = document.getElementById('login-container');
+
+      setTimeout(() => {
+        loader.classList.add('fade-out');
+        setTimeout(() => {
+          loader.style.display = 'none';
+          content.classList.remove('hidden');
+        }, 800);
+      }, 2000);
+    });
+  </script>
+</body>
+</html>

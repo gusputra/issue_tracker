@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: issue-tracker
+    env: python
+    plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "python3 index.py"
+    envVars:
+      - key: DATABASE_HOST
+        value: your-db-host
+      - key: DATABASE_USER
+        value: your-db-username
+      - key: DATABASE_PASSWORD
+        value: your-db-password
+      - key: DATABASE_NAME
+        value: your-db-name

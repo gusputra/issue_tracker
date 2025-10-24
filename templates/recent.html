@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Recent Issues - Tracker</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background: linear-gradient(135deg, #e0f7fa, #e3f2fd);
+      backdrop-filter: blur(12px);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+    }
+    .glass {
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    }
+
+    /* 🔄 Loading overlay */
+    #loadingOverlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(8px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    #loadingOverlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    .spin {
+      animation: spin 2s linear infinite;
+    }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    /* ✨ Fade-in animation for table */
+    .fade-in {
+      opacity: 0;
+      transform: translateY(10px);
+      animation: fadeIn 0.6s ease forwards;
+    }
+    @keyframes fadeIn {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+<body class="p-6">
+
+  <!-- 🔄 Loading Overlay -->
+  <div id="loadingOverlay">
+    <img src="{{ url_for('static', filename='images/HL_logo.png') }}" alt="Loading..." class="w-24 h-24 mb-4 spin opacity-80">
+    <p class="text-blue-700 font-semibold text-lg">Loading, please wait...</p>
+  </div>
+
+  <!-- Header -->
+  <div class="flex justify-between items-center mb-10">
+    <h1 class="text-4xl font-bold text-blue-700">📋 Recent Issues</h1>
+    <div class="space-x-4">
+      <a href="/" class="bg-blue-600 text-white px-5 py-2 rounded-xl shadow hover:bg-blue-700">Dashboard</a>
+      <a href="/logout" class="bg-red-500 text-white px-4 py-2 rounded-xl shadow hover:bg-red-600">Logout</a>
+    </div>
+  </div>
+
+  <!-- Filter Form -->
+  <form 
+    method="POST" 
+    action="/recent" 
+    class="glass rounded-2xl p-5 mb-8 shadow-md flex flex-wrap items-center gap-4"
+    onsubmit="showLoading()"
+  >
+    <input 
+      type="text" 
+      name="property_name" 
+      placeholder="🔍 Search property..." 
+      value="{{ request.form.get('property_name', '') }}" 
+      class="flex-grow px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-400 outline-none"
+    />
+
+    <select name="status" class="px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-400">
+      <option value="">All Status</option>
+      <option value="Open" {% if request.form.get('status') == 'Open' %}selected{% endif %}>Open</option>
+      <option value="In Progress" {% if request.form.get('status') == 'In Progress' %}selected{% endif %}>In Progress</option>
+      <option value="Closed" {% if request.form.get('status') == 'Closed' %}selected{% endif %}>Closed</option>
+    </select>
+
+    <select name="priority" class="px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-400">
+      <option value="">All Priority</option>
+      <option value="High" {% if request.form.get('priority') == 'High' %}selected{% endif %}>High</option>
+      <option value="Medium" {% if request.form.get('priority') == 'Medium' %}selected{% endif %}>Medium</option>
+      <option value="Low" {% if request.form.get('priority') == 'Low' %}selected{% endif %}>Low</option>
+    </select>
+
+    <button class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">Filter</button>
+    <a href="/recent" class="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-400 transition">Clear</a>
+  </form>
+
+  <!-- Table -->
+  <div id="resultsContainer" class="glass p-6 rounded-2xl overflow-hidden shadow-lg fade-in">
+    <table class="w-full text-sm text-left">
+      <thead class="bg-blue-600 text-white">
+        <tr>
+          <th class="p-3">🏨 Property</th>
+          <th class="p-3">📝 Description</th>
+          <th class="p-3">👤 Handled By</th>
+          <th class="p-3">⚡ Priority</th>
+          <th class="p-3">🔘 Status</th>
+          <th class="p-3">🗒️ Notes</th>
+          <th class="p-3">📅 Created</th>
+          {% if role == 'admin' %}
+          <th class="p-3 text-center">Actions</th>
+          {% endif %}
+        </tr>
+      </thead>
+      <tbody class="bg-white/60">
+        {% for issue in issues %}
+        <tr class="border-b hover:bg-blue-50/80 transition">
+          <td class="p-3 font-medium">{{ issue.property_name }}</td>
+          <td class="p-3">{{ issue.description }}</td>
+          <td class="p-3">{{ issue.handled_by }}</td>
+
+          <td class="p-3">
+            {% if issue.priority == 'High' %}
+              <span class="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-semibold">High</span>
+            {% elif issue.priority == 'Medium' %}
+              <span class="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-semibold">Medium</span>
+            {% else %}
+              <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold">Low</span>
+            {% endif %}
+          </td>
+
+          <td class="p-3">
+            {% if issue.status == 'Open' %}
+              <span class="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-semibold">Open</span>
+            {% elif issue.status == 'In Progress' %}
+              <span class="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-semibold">In Progress</span>
+            {% elif issue.status == 'Closed' %}
+              <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">Closed</span>
+            {% endif %}
+          </td>
+
+          <td class="p-3">{{ issue.notes or '-' }}</td>
+          <td class="p-3 text-gray-600">{{ issue.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+
+          {% if role == 'admin' or role == 'staff' %}
+          <td class="p-3 text-center space-x-2">
+            <a href="/edit/{{ issue.id }}" class="text-blue-600 hover:underline">Edit</a>
+            {% if role == 'admin' %}
+            <a href="/delete/{{ issue.id }}" onclick="return confirm('Are you sure?')" class="text-red-500 hover:underline">Delete</a>
+            {% endif %}
+          </td>
+          {% endif %}
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="8" class="text-center py-6 text-gray-500 italic">No issues found</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <footer class="text-center text-gray-500 mt-10 text-sm">
+    Issue Tracker © {{ now().year }} Hotel Link Support ID. All rights reserved.
+  </footer>
+
+  <script>
+    function showLoading() {
+      document.getElementById('loadingOverlay').classList.add('active');
+    }
+
+    // Fade-in effect saat halaman selesai load
+    window.addEventListener('load', () => {
+      const container = document.getElementById('resultsContainer');
+      container.classList.add('fade-in');
+    });
+  </script>
+</body>
+</html>
