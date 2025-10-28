@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block title %}Export Report - Issue Tracker{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto mt-12">
+  <div class="bg-white rounded-2xl shadow-xl p-8 border border-gray-200">
+    
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
+      <h2 class="text-3xl font-semibold text-gray-800 mb-4 md:mb-0 flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M4 4v16h16V4H4zm4 8h8m-8 4h8m-8-8h8" />
+        </svg>
+        Export Issue Report
+      </h2>
+      <p class="text-sm text-gray-500">Generate custom report based on date range.</p>
+    </div>
+
+    <!-- Date Filter Form -->
+    <form method="POST" class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+        <input type="date" name="start_date" value="{{ start_date or '' }}" required
+          class="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+        <input type="date" name="end_date" value="{{ end_date or '' }}" required
+          class="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+      </div>
+
+      <div class="flex items-end">
+        <button type="submit" name="filter"
+          class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium px-5 py-2 rounded-lg transition">
+          Filter
+        </button>
+      </div>
+
+      {% if issues %}
+      <div class="flex items-end">
+        <button type="submit" name="download"
+          class="w-full bg-green-600 hover:bg-green-700 text-white font-medium px-5 py-2 rounded-lg transition">
+          Download Excel
+        </button>
+      </div>
+      {% endif %}
+    </form>
+
+    {% if issues %}
+    <!-- Summary -->
+    <div class="flex justify-between items-center mb-4 border-b pb-2">
+      <h3 class="text-lg font-semibold text-gray-800">
+        Showing <span class="text-blue-600">{{ issues|length }}</span> issues
+        between <span class="font-medium">{{ start_date }}</span> and <span class="font-medium">{{ end_date }}</span>
+      </h3>
+    </div>
+
+    <!-- Table -->
+    <div class="overflow-x-auto rounded-xl border border-gray-200 shadow-sm">
+      <table class="min-w-full border-collapse text-sm text-gray-800">
+        <thead class="bg-gray-100 text-gray-700 text-sm uppercase tracking-wide">
+          <tr>
+            <th class="px-4 py-3 text-left font-semibold">Property</th>
+            <th class="px-4 py-3 text-left font-semibold">Status</th>
+            <th class="px-4 py-3 text-left font-semibold">Level</th>
+            <th class="px-4 py-3 text-left font-semibold">Handled By</th>
+            <th class="px-4 py-3 text-left font-semibold">Created At</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          {% for issue in issues %}
+          <tr class="hover:bg-blue-50 transition">
+            <td class="px-4 py-2">{{ issue.property_name }}</td>
+            <td class="px-4 py-2">
+              {% if issue.status == 'Closed' %}
+              <span class="text-green-700 font-medium bg-green-100 px-2 py-1 rounded-md text-xs">{{ issue.status }}</span>
+              {% else %}
+              <span class="text-yellow-700 font-medium bg-yellow-100 px-2 py-1 rounded-md text-xs">{{ issue.status }}</span>
+              {% endif %}
+            </td>
+            <td class="px-4 py-2">
+              {% if issue.level == 'High' %}
+              <span class="text-red-600 font-semibold">{{ issue.level }}</span>
+              {% elif issue.level == 'Medium' %}
+              <span class="text-orange-600 font-semibold">{{ issue.level }}</span>
+              {% else %}
+              <span class="text-green-600 font-semibold">{{ issue.level }}</span>
+              {% endif %}
+            </td>
+            <td class="px-4 py-2">{{ issue.handled_by }}</td>
+            <td class="px-4 py-2 text-gray-500">{{ issue.created_at.strftime('%Y-%m-%d') }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% else %}
+    <!-- Empty State -->
+    <div class="text-center py-12">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none"
+        viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="M9 17v-2m3 2v-4m3 4v-6M5 3h14a2 2 0 012 2v16a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z" />
+      </svg>
+      <p class="text-gray-600 text-lg font-medium">No data available for the selected date range.</p>
+      <p class="text-sm text-gray-400 mt-1">Try adjusting your filters and search again.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Log Activity - Issue Tracker{% endblock %}
+
+{% block content %}
+<div class="flex flex-col items-center w-full space-y-8">
+  <h2 class="text-3xl font-bold text-center bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
+    User Activity Log
+  </h2>
+
+  <div class="w-full max-w-4xl glass rounded-2xl border border-white/20 shadow-2xl p-6 space-y-4">
+    {% if logs %}
+      <ul class="relative border-l border-blue-400/40 pl-6 space-y-6">
+        {% for log in logs %}
+        <li class="relative">
+          <!-- Bullet titik -->
+          <div class="absolute -left-3 w-6 h-6 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full border-2 border-white/40 shadow-md"></div>
+
+          <div class="p-4 rounded-2xl bg-white/10 hover:bg-white/20 transition-all shadow-md">
+            <div class="flex justify-between items-center">
+              <span class="font-semibold text-white">{{ log.username }}</span>
+              <span class="text-sm text-gray-300">{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</span>
+            </div>
+            <p class="mt-2 text-gray-200">{{ log.action }}</p>
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="text-center text-gray-300 py-10">No activity logs yet.</p>
+    {% endif %}
+  </div>
+
+  <div class="flex justify-center">
+    <a href="{{ url_for('dashboard') }}"
+      class="px-6 py-2 bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500 text-white rounded-lg font-semibold shadow-md transition">
+      ⬅ Back to Dashboard
+    </a>
+  </div>
+</div>
+{% endblock %}

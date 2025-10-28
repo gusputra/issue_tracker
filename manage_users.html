@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}Manage Users - Issue Tracker{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto bg-white/90 dark:bg-gray-900/85 backdrop-blur-xl rounded-2xl shadow-2xl p-10 mt-10 border border-gray-200 dark:border-gray-700">
+  <!-- Header -->
+  <div class="flex justify-between items-center mb-8">
+    <h2 class="text-3xl font-extrabold text-gray-900 dark:text-white flex items-center gap-2">
+      <i data-lucide="users" class="w-7 h-7 text-blue-500"></i> Manage Users
+    </h2>
+    <a href="{{ url_for('dashboard') }}" 
+       class="text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1">
+       <i data-lucide="arrow-left" class="w-4 h-4"></i> Back to Dashboard
+    </a>
+  </div>
+
+  <!-- Add User Form -->
+  <form method="POST" class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12 bg-blue-50/60 dark:bg-gray-800/70 p-6 rounded-2xl border border-gray-200 dark:border-gray-700">
+    <div>
+      <label class="block text-sm font-semibold text-gray-800 dark:text-white mb-2">Username</label>
+      <input type="text" name="username" required
+        class="border border-gray-300 dark:border-gray-600 rounded-xl px-4 py-2 w-full focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-300">
+    </div>
+
+    <div>
+      <label class="block text-sm font-semibold text-gray-800 dark:text-white mb-2">Password</label>
+      <input type="password" name="password" required
+        class="border border-gray-300 dark:border-gray-600 rounded-xl px-4 py-2 w-full focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-300">
+    </div>
+
+    <div>
+      <label class="block text-sm font-semibold text-gray-800 dark:text-white mb-2">Role</label>
+      <select name="role" required
+        class="border border-gray-300 dark:border-gray-600 rounded-xl px-4 py-2 w-full focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
+        <option value="user">User</option>
+        <option value="staff">Staff</option>
+        <option value="admin">Admin</option>
+      </select>
+    </div>
+
+    <div class="flex items-end">
+      <button type="submit"
+        class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold px-5 py-2.5 rounded-xl shadow-md transition-all duration-200">
+        ➕ Add User
+      </button>
+    </div>
+  </form>
+
+  <!-- User Table -->
+  <div class="overflow-x-auto border border-gray-200 dark:border-gray-700 rounded-2xl shadow-md bg-white/90 dark:bg-gray-800/70">
+    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+      <thead class="bg-blue-100 dark:bg-gray-800/80">
+        <tr>
+          <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider">ID</th>
+          <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider">Username</th>
+          <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider">Role</th>
+          <th class="px-6 py-3 text-center text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider">Action</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+        {% for user in users %}
+        <tr class="hover:bg-blue-50 dark:hover:bg-gray-700/60 transition-all duration-200">
+          <td class="px-6 py-3 text-gray-900 dark:text-white">{{ user.id }}</td>
+          <td class="px-6 py-3 text-gray-900 dark:text-white font-medium">{{ user.username }}</td>
+          <td class="px-6 py-3">
+            <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold 
+              {% if user.role == 'admin' %} bg-red-100 text-red-700 dark:bg-red-800/40 dark:text-red-300
+              {% elif user.role == 'staff' %} bg-yellow-100 text-yellow-700 dark:bg-yellow-800/40 dark:text-yellow-300
+              {% else %} bg-green-100 text-green-700 dark:bg-green-800/40 dark:text-green-300 {% endif %}">
+              {{ user.role }}
+            </span>
+          </td>
+          <td class="px-6 py-3 text-center">
+            {% if user.role != 'admin' %}
+            <form method="POST" action="{{ url_for('delete_user', user_id=user.id) }}" class="inline">
+              <button type="submit"
+                class="bg-red-600 hover:bg-red-700 text-white px-4 py-1.5 rounded-lg shadow text-sm font-medium transition-all duration-200"
+                onclick="return confirm('Are you sure you want to delete {{ user.username }}?')">
+                Delete
+              </button>
+            </form>
+            {% else %}
+            <span class="text-gray-500 dark:text-gray-400 italic text-sm">Protected</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="4" class="px-6 py-6 text-center text-gray-600 dark:text-gray-400 italic">No users found.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  lucide.createIcons();
+</script>
+{% endblock %}

@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Issue Tracker{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex justify-between items-center">
+    <h2 class="text-3xl font-bold">Dashboard</h2>
+
+    <div class="flex items-center gap-3">
+      {% if role == 'admin' %}
+      <a href="{{ url_for('manage_users') }}"
+         class="px-5 py-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-lg shadow-md transition-slow">
+         👥 Manage Users
+      </a>
+      {% endif %}
+
+      <a href="{{ url_for('add_issue') }}"
+         class="px-5 py-2 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white rounded-lg shadow-md transition-slow">
+         + Add New Issue
+      </a>
+    </div>
+  </div>
+
+  <!-- Stats Overview -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <!-- Total Issues -->
+    <a href="{{ url_for('recent') }}" 
+       class="glass p-5 rounded-2xl shadow-md border border-white/20 block hover:bg-white/10 transition">
+      <h3 class="text-lg font-semibold mb-1">Total Issues</h3>
+      <p class="text-3xl font-bold text-blue-500">{{ total_issues }}</p>
+    </a>
+
+    <!-- In Progress -->
+    <a href="{{ url_for('recent', status='In Progress') }}" 
+       class="glass p-5 rounded-2xl shadow-md border border-white/20 block hover:bg-white/10 transition">
+      <h3 class="text-lg font-semibold mb-1">In Progress</h3>
+      <p class="text-3xl font-bold text-yellow-500">{{ in_progress_count }}</p>
+    </a>
+
+    <!-- Closed -->
+    <a href="{{ url_for('recent', status='Closed') }}" 
+       class="glass p-5 rounded-2xl shadow-md border border-white/20 block hover:bg-white/10 transition">
+      <h3 class="text-lg font-semibold mb-1">Closed</h3>
+      <p class="text-3xl font-bold text-green-500">{{ closed_count }}</p>
+    </a>
+  </div>
+
+  <!-- Chart Section -->
+  <div class="mt-10 bg-white/70 backdrop-blur-md rounded-2xl shadow-lg p-6 max-w-md mx-auto">
+    <h2 class="text-xl font-semibold text-center mb-4">Issue Level Overview</h2>
+
+    <!-- Chart Container -->
+    <div class="flex justify-center">
+      <div style="width: 260px; height: 260px;">
+        <canvas id="issueChart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Chart Script -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const ctx = document.getElementById('issueChart').getContext('2d');
+    const issueChart = new Chart(ctx, {
+      type: 'pie',
+      data: {
+        labels: {{ levels | tojson }},
+        datasets: [{
+          label: 'Issue Count',
+          data: {{ counts | tojson }},
+          backgroundColor: [
+            '#34d399',  // green
+            '#fbbf24',  // yellow
+            '#f87171',  // red
+            '#60a5fa'   // blue
+          ],
+          borderWidth: 1,
+          hoverOffset: 10
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              boxWidth: 12,
+              padding: 10,
+              font: { size: 13 }
+            }
+          },
+          title: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                const label = context.label || '';
+                const value = context.raw || 0;
+                const total = context.chart._metasets[context.datasetIndex].total;
+                const percentage = ((value / total) * 100).toFixed(1);
+                return `${label}: ${value} issues (${percentage}%)`;
+              }
+            }
+          }
+        },
+        animation: {
+          animateScale: true,
+          animateRotate: true
+        }
+      }
+    });
+  });
+</script>
+<p class="text-center text-gray-500 dark:text-gray-400 text-sm mt-8">
+  © 2025 Hotel Link Support ID
+</p>
+{% endblock %}
